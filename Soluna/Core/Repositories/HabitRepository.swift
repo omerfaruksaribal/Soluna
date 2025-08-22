@@ -34,6 +34,13 @@ final class HabitRepository {
         return Habit(id: ref.documentID, title: title, targetPerDay: targetPerDay, isActive: true, createdAt: now)
     }
 
+    func update(uid: String, habitId: String, title: String, targetPerDay: Int) async throws {
+        try await habitsRef(uid: uid).document(habitId).updateData([
+            "title": title,
+            "targetPerDay": targetPerDay
+        ])
+    }
+
     func setActive(uid: String, habitId: String, isActive: Bool) async throws {
         try await habitsRef(uid: uid).document(habitId).updateData(["isActive": isActive])
     }

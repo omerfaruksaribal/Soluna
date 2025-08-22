@@ -1,5 +1,10 @@
 import FirebaseFirestore
 
+enum HabitError: LocalizedError, Equatable {
+    case targetReached
+    var errorDescription: String? { "Daily target reached." }
+}
+
 final class HabitLogRepository {
     private let db = Firestore.firestore()
     private func logsRef(uid: String) -> CollectionReference {
@@ -18,16 +23,48 @@ final class HabitLogRepository {
         Calendar.current.startOfDay(for: date)
     }
 
-    /// Tick: makes the that day's documnet upsert, coun increases by 1.
-    func tick(uid: String, habitId: String, on date: Date = .now) async throws {
-        let key = HabitLogRepository.dayKey(date)
+    func todayCounts(uid: String, today: Date = .now) async throws -> [String:Int] {
+        let day = Self.startOfDay(today)
+        let snap = try await logsRef(uid: uid)
+            .whereField("date", isEqualTo: Timestamp(date: day))
+            .getDocuments()
+
+        var out: [String:Int] = [:]
+        for doc in snap.documents {
+            let d = doc.data()
+            let id = d["habitId"] as? String ?? ""
+            let c  = d["count"] as? Int ?? 0
+            out[id] = c
+        }
+        return out
+    }
+
+    /// Tick: makes the that day's documnet upsert, count increases by 1.
+    func tickCapped(uid: String, habit: Habit, on date: Date = .now) async throws -> Int {
+        guard let habitId = habit.id else { return 0 }
+
+        let key   = Self.dayKey(date)
         let docId = "\(habitId)_\(key)"
-        let doc = logsRef(uid: uid).document(docId)
-        try await doc.setData([
+        let ref   = logsRef(uid: uid).document(docId)
+        let sod   = Self.startOfDay(date)
+
+        // mevcut sayıyı oku
+        let currentSnap = try await ref.getDocument()
+        let current = (currentSnap.data()?["count"] as? Int) ?? 0
+
+        // hedefe ulaştıysa dur
+        if current >= habit.targetPerDay {
+            throw HabitError.targetReached
+        }
+
+        // +1 yaz (sunucu tarafında güvenli artırım)
+        try await ref.setData([
             "habitId": habitId,
-            "date": Timestamp(date: HabitLogRepository.startOfDay(date)),
+            "date": Timestamp(date: sod),
             "count": FieldValue.increment(Int64(1))
         ], merge: true)
+
+        return current + 1
     }
 
     /// brings the daily habit logs  spesific time
@@ -71,19 +108,4 @@ final class HabitLogRepository {
         return streak
     }
 
-    func todayCounts(uid: String, today: Date = .now) async throws -> [String:Int] {
-        let day = HabitLogRepository.startOfDay(today)
-        let snap = try await logsRef(uid: uid)
-            .whereField("date", isEqualTo: Timestamp(date: day))
-            .getDocuments()
-
-        var out: [String:Int] = [:]
-        for doc in snap.documents {
-            let d = doc.data()
-            let id = d["habitId"] as? String ?? ""
-            let c  = d["count"] as? Int ?? 0
-            out[id] = c
-        }
-        return out
-    }
 }

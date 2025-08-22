@@ -7,33 +7,18 @@ struct HabitListView: View {
         List {
             ForEach(Array(vm.habits.enumerated()), id: \.offset) { _, habit in
                 let p = vm.progress(for: habit)
-
-                HStack(spacing: 12) {
-                    ProgressRing(progress: p.ratio, size: 28)
-                        .foregroundStyle(BrandColor.primary)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(habit.title).bold()
-                        Text("\(p.count) / \(p.target) today")
-                            .font(.caption).foregroundStyle(p.done ? .green : .secondary)
-                    }
-                    Spacer()
-                    Button {
-                        Task { await vm.tick(habit) }
-                    } label: {
-                        Image(systemName: p.done ? "checkmark.circle" : "checkmark.circle.fill")
-                            .imageScale(.large)
-                    }
-                    .disabled(p.done)
-                    .opacity(p.done ? 0.4 : 1.0)
-                }
-                .padding(12)
-                .background(Styles.cardContainer())
+                HabitRow(
+                    habit: habit,
+                    progress: p,
+                    onTick: { Task { await vm.tick(habit) } },
+                    onToggleActive: { Task { await vm.toggleActive(habit) } },
+                    onEdit: { vm.beginEdit(habit) }
+                )
             }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(BrandColor.background)               
+        .background(BrandColor.background)
         .tint(BrandColor.primary)
         .task { await vm.load() }
         .toolbar {
@@ -41,8 +26,91 @@ struct HabitListView: View {
                 NavigationLink("Add") { AddHabitView(vm: vm) }
             }
         }
+        // Edit Sheet
+        .sheet(isPresented: Binding(
+            get: { vm.editingHabit != nil },
+            set: { if !$0 { vm.editingHabit = nil } })
+        ) {
+            EditHabitSheet(vm: vm)
+        }
+    }
+
+private struct HabitRow: View {
+    let habit: Habit
+    let progress: (count: Int, target: Int, done: Bool, ratio: Double)
+    let onTick: () -> Void
+    let onToggleActive: () -> Void
+    let onEdit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ProgressRing(progress: progress.ratio, size: 28)
+                .foregroundStyle(BrandColor.primary)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(habit.title).bold()
+                Text("\(progress.count) / \(progress.target) today")
+                    .font(.caption)
+                    .foregroundStyle(progress.done ? .green : .secondary)
+            }
+            Spacer()
+            Button(action: onTick) {
+                Image(systemName: progress.done ? "checkmark.circle" : "checkmark.circle.fill")
+                    .imageScale(.large)
+            }
+            .disabled(progress.done || !habit.isActive)
+            .opacity((progress.done || !habit.isActive) ? 0.35 : 1.0)
+        }
+        .padding(12)
+        .background(Styles.cardContainer())
+        .contextMenu {
+            Button(habit.isActive ? "Deactivate" : "Activate", action: onToggleActive)
+            Button("Edit", action: onEdit)
+        }
+        .swipeActions {
+            Button(habit.isActive ? "Deactivate" : "Activate", action: onToggleActive)
+                .tint(habit.isActive ? .orange : .green)
+            Button("Edit", action: onEdit)
+                .tint(.blue)
+        }
     }
 }
+}
+
+//  MARK: - Edit Sheet
+private struct EditHabitSheet: View {
+    @State var vm: HabitVM
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Title") {
+                    TextField("Habit title", text: $vm.editTitle)
+                }
+                Section("Daily target") {
+                    Stepper("Per day: \(vm.editTarget)", value: $vm.editTarget, in: 1...20)
+                }
+                if let e = vm.error {
+                    Text(e).foregroundStyle(.red).font(.footnote)
+                }
+            }
+            .navigationTitle("Edit Habit")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { vm.editingHabit = nil }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Task { await vm.saveEdit() }
+                    }
+                    .disabled(vm.editTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
 
 private struct ProgressRing: View {
     let progress: Double
