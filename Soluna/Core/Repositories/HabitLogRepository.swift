@@ -70,4 +70,20 @@ final class HabitLogRepository {
         }
         return streak
     }
+
+    func todayCounts(uid: String, today: Date = .now) async throws -> [String:Int] {
+        let day = HabitLogRepository.startOfDay(today)
+        let snap = try await logsRef(uid: uid)
+            .whereField("date", isEqualTo: Timestamp(date: day))
+            .getDocuments()
+
+        var out: [String:Int] = [:]
+        for doc in snap.documents {
+            let d = doc.data()
+            let id = d["habitId"] as? String ?? ""
+            let c  = d["count"] as? Int ?? 0
+            out[id] = c
+        }
+        return out
+    }
 }

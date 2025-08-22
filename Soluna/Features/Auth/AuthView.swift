@@ -54,7 +54,7 @@ struct AuthView: View {
                             .autocorrectionDisabled()
                             .focused($focusedField, equals: .email)
 
-                        IconSecureField(system: "lock.fill", placeholder: "Password",
+                        IconSecureField(system: "lock.fill", placeholder: "Password (min 8 characters)",
                                         text: $password, show: $showPassword)
                             .focused($focusedField, equals: .password)
                     }
