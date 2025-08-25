@@ -40,7 +40,12 @@ final class HabitVM {
         guard let uid = await AuthService.shared.uid else { return }
         do {
             let newCount = try await logRepo.tickCapped(uid: uid, habit: habit)
-            if let id = habit.id { todayCounts[id] = newCount }
+            if let habitID = habit.id {
+                todayCounts[habitID] = newCount
+                Task {
+                    await StreakSync.updateAfterTick(uid: uid, habitId: habitID, logRepo: logRepo)
+                }
+            }
             Haptics.success()
         } catch let he as HabitError where he == .targetReached {
             Haptics.impact()

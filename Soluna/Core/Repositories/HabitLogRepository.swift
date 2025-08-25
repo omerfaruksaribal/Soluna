@@ -86,26 +86,34 @@ final class HabitLogRepository {
             )
         }
     }
+}
 
+extension HabitLogRepository {
     /// simple streak calc
-    func streak(uid: String, habitId: String, lookbackDays: Int = 60) async throws -> Int {
-        let now = HabitLogRepository.startOfDay(.now)
+    func streak(uid: String, habitId: String, lookbackDays: Int = 90) async throws -> Int {
+        let now  = Self.startOfDay(.now)
         let from = Calendar.current.date(byAdding: .day, value: -lookbackDays, to: now)!
-        let items = try await logs(uid: uid, habitId: habitId, from: from, to: now.addingTimeInterval(24*3600))
 
-        // logs() already returns daily log
-        var set: Set<String> = []
-        for l in items {
-            set.insert(HabitLogRepository.dayKey(l.date))
+        let snap = try await logsRef(uid: uid)
+            .whereField("habitId", isEqualTo: habitId)
+            .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: from))
+            .whereField("date", isLessThan: Timestamp(date: now.addingTimeInterval(24*3600)))
+            .order(by: "date", descending: true)
+            .getDocuments()
+
+        var days: Set<String> = []
+        for d in snap.documents {
+            if let ts = d.data()["date"] as? Timestamp {
+                days.insert(Self.dayKey(ts.dateValue()))
+            }
         }
 
         var streak = 0
-        var day = now
-        while set.contains(HabitLogRepository.dayKey(day)) {
+        var cursor = now
+        while days.contains(Self.dayKey(cursor)) {
             streak += 1
-            day = Calendar.current.date(byAdding: .day, value: -1, to: day)!
+            cursor = Calendar.current.date(byAdding: .day, value: -1, to: cursor)!
         }
         return streak
     }
-
 }

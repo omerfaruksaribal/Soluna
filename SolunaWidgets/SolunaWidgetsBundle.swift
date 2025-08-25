@@ -1,6 +1,12 @@
 import WidgetKit
 import SwiftUI
 
+private let appGroupID = "group.com.saribal.Soluna"
+
+private func currentStreak() -> Int {
+    UserDefaults(suiteName: appGroupID)?.integer(forKey: "lastStreak") ?? 0
+}
+
 // MARK: - Entry
 struct StreakEntry: TimelineEntry {
     let date: Date
@@ -19,9 +25,9 @@ struct StreakProvider: TimelineProvider {
         completion(.init(date: .now, streak: 5))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<StreakEntry>) -> Void) {
-        let entry = StreakEntry(date: .now, streak: 7)
-        completion(Timeline(entries: [entry], policy: .after(.now.addingTimeInterval(3600))))
+    func getTimeline(in context: Context, completion: @escaping (Timeline<StreakEntry>)->()) {
+        let entry = StreakEntry(date: .now, streak: currentStreak())
+        completion(Timeline(entries: [entry], policy: .after(.now.addingTimeInterval(1800))))
     }
 }
 

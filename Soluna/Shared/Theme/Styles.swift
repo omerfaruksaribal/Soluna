@@ -11,4 +11,11 @@ enum Styles {
             )
             .shadow(color: .black.opacity(0.08), radius: 12, y: 6)
     }
+
+    static func cardRowBackground() -> some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(BrandColor.card)
+            .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+            .padding(.vertical, 6)
+    }
 }

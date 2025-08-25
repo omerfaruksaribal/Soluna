@@ -32,4 +32,8 @@ final class MoodRepository {
         let ref = try await moodsRef(uid: uid).addDocument(data: payload)
         return MoodEntry(id: ref.documentID, mood: mood, note: note, date: now)
     }
+
+    func delete(uid: String, moodId: String) async throws {
+        try await moodsRef(uid: uid).document(moodId).delete()
+    }
 }

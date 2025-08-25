@@ -68,7 +68,9 @@ private struct HabitRow: View {
             .opacity((progress.done || !habit.isActive) ? 0.35 : 1.0)
         }
         .padding(12)
-        .background(Styles.cardContainer())
+        .contentShape(Rectangle())
+        .listRowInsets(.init(top: 6, leading: 16, bottom: 6, trailing: 16))
+        .listRowBackground(Styles.cardRowBackground())
         .contextMenu {
             Button(habit.isActive ? "Deactivate" : "Activate", action: onToggleActive)
             Button("Edit", action: onEdit)

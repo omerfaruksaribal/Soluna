@@ -26,4 +26,16 @@ final class MoodVM {
             note = ""; selectedMood = "neutral"
         } catch { self.error = error.localizedDescription }
     }
+
+    func delete(_ mood: MoodEntry) async {
+        guard let uid = await AuthService.shared.uid, let id = mood.id else { return }
+        do {
+            try await repo.delete(uid: uid, moodId: id)
+            if let idx = moods.firstIndex(where: { $0.id == id }) {
+                moods.remove(at: idx)
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
 }

@@ -17,6 +17,9 @@ struct MoodListView: View {
                 Text("2-Week Trend")
             }
 
+            .listRowInsets(.init(top: 8, leading: 16, bottom: 4, trailing: 16))
+            .listRowBackground(BrandColor.background)
+
             Section("Entries") {
                 ForEach(vm.moods) { mood in
                     VStack(alignment: .leading, spacing: 6) {
@@ -26,13 +29,24 @@ struct MoodListView: View {
                         }
                         Text(mood.date, style: .date).font(.caption).foregroundStyle(.secondary)
                     }
-                    .padding(10)
-                    .background(Styles.cardContainer())
+                    .padding(12)
+                    .contentShape(Rectangle())
+                    .listRowInsets(.init(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    .listRowBackground(Styles.cardRowBackground())
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            Task { await vm.delete(mood) }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .tint(.red)
+                    }
                 }
             }
         }
+        .listStyle(.plain)
+        .listRowSeparator(.hidden)
         .scrollContentBackground(.hidden)
-        .background(BrandColor.background)  
         .task {
             await vm.load()
         }
