@@ -3,6 +3,8 @@ import Charts
 
 struct MoodListView: View {
     @State private var vm = MoodVM()
+    @State private var showAddedToast = false
+
     var body: some View {
         List {
             Section {
@@ -35,10 +37,13 @@ struct MoodListView: View {
             await vm.load()
         }
         .toolbar {
-            NavigationLink("Add") {
-                AddMoodView(vm: vm)
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink("Add") {
+                    AddMoodView(vm: vm) { showAddedToast = true }
+                }
             }
         }
+        .toast("Mood added", isPresented: $showAddedToast)
     }
 
     // Precomputed data for the chart to help the compiler

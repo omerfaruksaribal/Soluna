@@ -2,14 +2,15 @@ import SwiftUI
 
 struct HabitListView: View {
     @State private var vm = HabitVM()
+    @State private var showAddedToast = false
 
     var body: some View {
         List {
             ForEach(Array(vm.habits.enumerated()), id: \.offset) { _, habit in
-                let p = vm.progress(for: habit)
+                let progress = vm.progress(for: habit)
                 HabitRow(
                     habit: habit,
-                    progress: p,
+                    progress: progress,
                     onTick: { Task { await vm.tick(habit) } },
                     onToggleActive: { Task { await vm.toggleActive(habit) } },
                     onEdit: { vm.beginEdit(habit) }
@@ -23,9 +24,14 @@ struct HabitListView: View {
         .task { await vm.load() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink("Add") { AddHabitView(vm: vm) }
+                NavigationLink("Add") {
+                    AddHabitView(vm: vm)
+                    { showAddedToast = false }
+                }
             }
         }
+        .toast("Habit Added", isPresented: $showAddedToast)
+        
         // Edit Sheet
         .sheet(isPresented: Binding(
             get: { vm.editingHabit != nil },
