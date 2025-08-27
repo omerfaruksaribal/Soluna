@@ -15,7 +15,14 @@ struct DashboardView: View {
 
             if tab == 0 { MoodListView() } else { HabitListView() }
         }
-        .navigationTitle("Soluna")
+        .navigationTitle(tab == 0 ? "Moods" : "Habits")
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(tab == 0 ? "Moods" : "Habits")
+                    .font(.headline)
+            }
+        }
         .tint(BrandColor.primary)                    // accent
         .background(BrandColor.background.ignoresSafeArea())
     }

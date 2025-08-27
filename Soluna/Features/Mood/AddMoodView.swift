@@ -39,6 +39,13 @@ struct AddMoodView: View {
             }
         }
         .navigationTitle("Add Mood")
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Add Mood")
+                    .font(.headline)
+            }
+        }
         .scrollContentBackground(.hidden)
         .background(BrandColor.background)
     }

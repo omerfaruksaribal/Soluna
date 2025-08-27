@@ -33,6 +33,13 @@ struct AddHabitView: View {
             }
         }
         .navigationTitle("Add Habit")
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Add Habit")
+                    .font(.headline)
+            }
+        }
         .scrollContentBackground(.hidden)
     }
 }

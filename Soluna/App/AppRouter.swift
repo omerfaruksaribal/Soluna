@@ -13,17 +13,29 @@ struct AppRouter: View {
 
     var body: some View {
         let mode = ThemeMode(rawValue: themeRaw) ?? .system
-        NavigationStack {
+
+        Group {
             if session.isSignedIn {
                 TabView {
-                    DashboardView()
-                        .tabItem { Label("Home", systemImage: "square.grid.2x2") }
+                    NavigationStack {
+                        DashboardView()
+                    }
+                    .tabItem { Label("Home", systemImage: "square.grid.2x2") }
 
-                    ProfileView()
-                        .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                    NavigationStack {
+                        RoutineListView()
+                    }
+                    .tabItem { Label("Routines", systemImage: "checklist") }
+
+                    NavigationStack {
+                        ProfileView()
+                    }
+                    .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 }
             } else {
-                AuthView(onSignedIn: { session.isSignedIn = true } )
+                NavigationStack {
+                    AuthView(onSignedIn: { session.isSignedIn = true })
+                }
             }
         }
         .preferredColorScheme(mode.colorScheme)

@@ -103,6 +103,13 @@ private struct EditHabitSheet: View {
                 }
             }
             .navigationTitle("Edit Habit")
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Edit Habit")
+                        .font(.headline)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { vm.editingHabit = nil }

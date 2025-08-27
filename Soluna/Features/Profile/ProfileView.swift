@@ -68,6 +68,13 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("Profile")
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Profile")
+                        .font(.headline)
+                }
+            }
         }
         .onAppear {
             if let d = Calendar.current.date(from: DateComponents(hour: reminderHour, minute: reminderMinute)) {
